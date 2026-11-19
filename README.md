@@ -235,6 +235,30 @@ conditional_value_at_risk(returns, sigma=1, confidence=0.95, prepare_returns=Tru
     comprehensive risk measure than VaR alone.
 ```
 
+### Limit order book & imbalance modeling
+
+`qs.lob` works on order book snapshots: a DataFrame with one row per snapshot
+and columns `bid_price_1`, `bid_size_1`, `ask_price_1`, `ask_size_1` (and
+`_2`, `_3`, ... for deeper levels). A top-of-book frame may use `bid`, `ask`,
+`bid_size` and `ask_size`; `qs.lob.to_book()` renames other layouts.
+
+```python
+from quantstats import lob
+
+lob.queue_imbalance(book)                  # (Qb - Qa) / (Qb + Qa)
+lob.depth_imbalance(book, decay=0.5)       # multi-level, deeper levels weigh less
+lob.order_flow_imbalance(book, levels=5)   # Cont-Kukanov-Stoikov OFI per level
+
+impact = lob.price_impact(book, freq="1s") # dMid = alpha + beta * OFI
+impact.beta, impact.r2
+
+lob.imbalance_signal(book, bins=10)        # P(next mid move up/down) by imbalance
+
+model = lob.fit_microprice(book)           # Stoikov (2018) micro-price
+model.adjustment                           # g*(imbalance, spread) in price units
+micro = model.predict(book)
+```
+
 ## Installation
 
 Install using `pip`:
