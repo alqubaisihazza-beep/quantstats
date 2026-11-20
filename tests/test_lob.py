@@ -301,3 +301,32 @@ class TestMicroprice:
             lob.fit_microprice(book, n_imbalance=1)
         with pytest.raises(ValueError, match="no usable"):
             lob.fit_microprice(book, tick_size=1.0)
+
+
+class TestPlots:
+    @pytest.fixture(autouse=True)
+    def _agg(self):
+        import matplotlib
+
+        matplotlib.use("Agg")
+
+    def test_all_charts(self, book, model, tmp_path):
+        from matplotlib.figure import Figure
+
+        from quantstats import plots
+
+        small = book.iloc[:300]
+        figs = [
+            plots.lob_imbalance_signal(book, bins=6, show=False),
+            plots.lob_imbalance_signal(lob.imbalance_signal(book), show=False),
+            plots.lob_microprice(model, show=False),
+            plots.lob_microprice(model, in_ticks=False, grayscale=True, show=False),
+            plots.lob_price_impact(lob.price_impact(book, freq="10s"), show=False),
+            plots.lob_depth(book, show=False),
+            plots.lob_depth(book, at=book.index[10], show=False),
+            plots.lob_timeseries(small, model=model, show=False),
+        ]
+        assert all(isinstance(f, Figure) for f in figs)
+        out = tmp_path / "depth.png"
+        plots.lob_depth(book, savefig=str(out), show=False)
+        assert out.stat().st_size > 0
