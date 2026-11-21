@@ -22,9 +22,9 @@ from . import version
 __version__ = version.version
 __author__ = "Ran Aroussi"
 
-from . import plots, reports, stats, utils
+from . import lob, plots, reports, stats, utils
 
-__all__ = ["stats", "plots", "reports", "utils", "extend_pandas"]
+__all__ = ["stats", "plots", "reports", "utils", "lob", "extend_pandas"]
 
 # try automatic matplotlib inline
 utils._in_notebook(matplotlib_inline=True)

@@ -1,6 +1,31 @@
 Changelog
 ===========
 
+Unreleased
+----------
+
+- New `quantstats.lob` module for limit order book and imbalance modeling,
+  built on L1/L2 snapshot DataFrames (`bid_price_1`, `bid_size_1`,
+  `ask_price_1`, `ask_size_1`, ... or `bid`/`ask`/`bid_size`/`ask_size`):
+  - Book features: `mid_price()`, `spread()`, `depth()`, `weighted_mid()`.
+  - Imbalance: `queue_imbalance()` and multi-level `depth_imbalance()` with
+    custom or exponentially decaying level weights.
+  - Order flow: `order_flow_imbalance()` per level (Cont, Kukanov & Stoikov,
+    2014) and `integrated_ofi()` (first principal component of depth-scaled
+    multi-level OFI, Cont, Cucuringu & Zhang, 2023).
+  - `price_impact()`: OLS of mid changes on OFI over time or tick windows,
+    with t-stats and optional depth normalisation.
+  - `imbalance_signal()`: probability of the next mid move up or down by
+    imbalance bucket.
+  - `fit_microprice()`: Stoikov (2018) micro-price, a Markov-chain estimate
+    of the expected future mid from imbalance and spread, with `predict()`.
+  - `from_depth()`: build a book from exchange depth snapshots
+    (`{"bids": [[price, size], ...], "asks": [...]}`).
+- New order book charts: `qs.plots.lob_depth()`, `lob_timeseries()`,
+  `lob_imbalance_signal()`, `lob_price_impact()` and `lob_microprice()`.
+- New example notebook, `docs/lob.ipynb`, running the models on live Binance
+  order books.
+
 0.0.86
 ------
 

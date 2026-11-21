@@ -2123,3 +2123,14 @@ def montecarlo_distribution(
         show=show,
         bins=bins,
     )
+
+
+# ======== LIMIT ORDER BOOK ========
+
+from .lob import (  # noqa: E402, F401  (re-exported via plots)
+    lob_depth,
+    lob_imbalance_signal,
+    lob_microprice,
+    lob_price_impact,
+    lob_timeseries,
+)
