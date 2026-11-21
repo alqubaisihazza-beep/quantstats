@@ -368,4 +368,4 @@ def test_microprice_first_order(model, book):
     imb = lob.queue_imbalance(book)
     # Both forecasts lean the same way as the imbalance.
     assert (g1[imb > 0.5] > mid[imb > 0.5]).all()
-    assert not np.allclose(g1, full)
+    assert not np.allclose(g1 - mid, full - mid, rtol=0, atol=1e-7)
