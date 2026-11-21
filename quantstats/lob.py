@@ -602,20 +602,27 @@ class MicropriceModel:
     """``g1``: expected mid change at the next move only."""
     nobs: int = 0
 
-    def predict(self, book: _pd.DataFrame) -> _pd.Series:
+    def predict(self, book: _pd.DataFrame, first_order: bool = False) -> _pd.Series:
         """
         Micro-price for each snapshot.
+
+        Args:
+            book: Snapshots to price.
+            first_order: Use ``g1``, the expected mid after the *next* move,
+                instead of the long-run ``g*``. ``g1`` is the better forecast
+                of the next price change when moves are autocorrelated.
 
         Spreads outside the fitted range, and states never seen in fitting,
         use the mid unchanged.
         """
+        table = self.first_order if first_order else self.adjustment
         mid = mid_price(book)
         imb = _imbalance01(book)
         bucket = _bucket(imb, self.bin_edges)
         ticks = _np.round(spread(book).to_numpy() / self.tick_size)
         adj = _np.zeros(len(mid))
-        for s in self.adjustment.columns:
-            col = _np.nan_to_num(self.adjustment[s].to_numpy(), nan=0.0)
+        for s in table.columns:
+            col = _np.nan_to_num(table[s].to_numpy(), nan=0.0)
             mask = (ticks == s) & (bucket >= 0)
             adj[mask] = col[bucket[mask]]
         return (mid + adj).rename("microprice")

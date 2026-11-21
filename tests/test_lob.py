@@ -358,3 +358,14 @@ class TestFromDepth:
             lob.from_depth(snaps, levels=2)
         with pytest.raises(ValueError):
             lob.from_depth([{"bids": [], "asks": [[1, 1]]}])
+
+
+def test_microprice_first_order(model, book):
+    g1 = model.predict(book, first_order=True)
+    full = model.predict(book)
+    mid = lob.mid_price(book)
+    assert g1.notna().all()
+    imb = lob.queue_imbalance(book)
+    # Both forecasts lean the same way as the imbalance.
+    assert (g1[imb > 0.5] > mid[imb > 0.5]).all()
+    assert not np.allclose(g1, full)
