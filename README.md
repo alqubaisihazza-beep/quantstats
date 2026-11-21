@@ -259,6 +259,13 @@ model.adjustment                           # g*(imbalance, spread) in price unit
 micro = model.predict(book)
 ```
 
+Build a book straight from exchange depth snapshots
+(`{"bids": [[price, size], ...], "asks": [...]}`) with `lob.from_depth()`, and
+chart the models with `qs.plots.lob_depth()`, `lob_timeseries()`,
+`lob_imbalance_signal()`, `lob_price_impact()` and `lob_microprice()`.
+[`docs/lob.ipynb`](docs/lob.ipynb) walks through all of it on live Binance
+order books.
+
 ## Installation
 
 Install using `pip`:

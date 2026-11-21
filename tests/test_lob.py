@@ -330,3 +330,31 @@ class TestPlots:
         out = tmp_path / "depth.png"
         plots.lob_depth(book, savefig=str(out), show=False)
         assert out.stat().st_size > 0
+
+
+class TestFromDepth:
+    def test_binance_like(self):
+        snaps = [
+            {
+                "E": 1700000000000 + 100 * k,
+                "bids": [["100.01", "5"], ["100.00", "7"], ["99.99", "1"]],
+                "asks": [["100.02", "3"], ["100.03", "4"]],
+            }
+            for k in range(3)
+        ]
+        book = lob.from_depth(snaps, time_key="E")
+        assert lob.levels(book) == 2
+        assert book["bid_price_1"].iloc[0] == 100.01
+        assert book["ask_size_2"].iloc[0] == 4.0
+        assert isinstance(book.index, pd.DatetimeIndex)
+        assert book.index[1] - book.index[0] == pd.Timedelta("100ms")
+
+    def test_extra_fields_and_errors(self):
+        snaps = [{"bids": [[1.0, 2.0, 3]], "asks": [[1.1, 4.0, 1]]}] * 2
+        book = lob.from_depth(snaps, timestamps=[0, 1])
+        assert list(book.index) == [0, 1]
+        assert lob.queue_imbalance(book).iloc[0] == pytest.approx(-1 / 3)
+        with pytest.raises(ValueError):
+            lob.from_depth(snaps, levels=2)
+        with pytest.raises(ValueError):
+            lob.from_depth([{"bids": [], "asks": [[1, 1]]}])

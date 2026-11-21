@@ -19,6 +19,12 @@ Unreleased
     imbalance bucket.
   - `fit_microprice()`: Stoikov (2018) micro-price, a Markov-chain estimate
     of the expected future mid from imbalance and spread, with `predict()`.
+  - `from_depth()`: build a book from exchange depth snapshots
+    (`{"bids": [[price, size], ...], "asks": [...]}`).
+- New order book charts: `qs.plots.lob_depth()`, `lob_timeseries()`,
+  `lob_imbalance_signal()`, `lob_price_impact()` and `lob_microprice()`.
+- New example notebook, `docs/lob.ipynb`, running the models on live Binance
+  order books.
 
 0.0.86
 ------

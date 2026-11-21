@@ -53,6 +53,7 @@ from scipy import stats as _sstats
 
 __all__ = [
     "to_book",
+    "from_depth",
     "levels",
     "mid_price",
     "spread",
@@ -127,6 +128,68 @@ def to_book(
         f"{s}_{f}_{n}" for n in range(1, n_levels + 1) for s in _SIDES for f in _FIELDS
     ]
     return df[cols].astype(float)
+
+
+def from_depth(
+    snapshots: list[dict],
+    levels: int | None = None,
+    timestamps: list | _pd.Index | None = None,
+    time_key: str | None = None,
+) -> _pd.DataFrame:
+    """
+    Build a book from exchange depth snapshots.
+
+    Each snapshot is a mapping with ``"bids"`` and ``"asks"``, each a list of
+    ``[price, size, ...]`` entries ordered best first, the shape returned by
+    most exchange REST and websocket depth feeds (Binance, Coinbase level 2,
+    Kraken, OKX, Bybit). Prices and sizes may be strings. Extra fields in an
+    entry (order counts, timestamps) are ignored.
+
+    Args:
+        snapshots: Depth snapshots in time order.
+        levels: Levels to keep; the fewest levels any snapshot has if None.
+        timestamps: Index for the result, one per snapshot.
+        time_key: Snapshot field holding the time, used when ``timestamps``
+            is None. Numbers are read as epoch milliseconds.
+
+    Returns:
+        DataFrame in the :mod:`quantstats.lob` book layout.
+
+    Raises:
+        ValueError: If a snapshot has no bids or asks, or fewer than
+            ``levels`` levels.
+    """
+    if not snapshots:
+        raise ValueError("no snapshots")
+    depths = [min(len(s["bids"]), len(s["asks"])) for s in snapshots]
+    if min(depths) == 0:
+        raise ValueError("every snapshot needs at least one bid and one ask")
+    n = min(depths) if levels is None else int(levels)
+    if n > min(depths):
+        raise ValueError(f"a snapshot has only {min(depths)} levels, asked for {n}")
+    cols = [
+        f"{side}_{fld}_{i}"
+        for i in range(1, n + 1)
+        for side in _SIDES
+        for fld in _FIELDS
+    ]
+    arr = _np.empty((len(snapshots), 4 * n))
+    for r, snap in enumerate(snapshots):
+        bids, asks = snap["bids"], snap["asks"]
+        for i in range(n):
+            arr[r, 4 * i : 4 * i + 2] = bids[i][:2]
+            arr[r, 4 * i + 2 : 4 * i + 4] = asks[i][:2]
+    index = None
+    if timestamps is not None:
+        index = _pd.Index(timestamps)
+    elif time_key is not None:
+        raw = [s[time_key] for s in snapshots]
+        index = _pd.DatetimeIndex(
+            _pd.to_datetime(raw, unit="ms")
+            if isinstance(raw[0], (int, float))
+            else _pd.to_datetime(raw)
+        )
+    return _pd.DataFrame(arr, columns=cols, index=index)
 
 
 def levels(book: _pd.DataFrame) -> int:
