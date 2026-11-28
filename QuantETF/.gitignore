@@ -1,0 +1,12 @@
+# secrets / local config
+.env
+# local database and generated output
+*.db
+*.sqlite
+reports/*
+!reports/.gitkeep
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

@@ -1,0 +1,95 @@
+# QuantETF configuration
+# Expense ratios are approximate and for screening only - verify with the issuer before investing.
+
+data:
+  provider: yfinance          # yfinance | synthetic (offline demo data, NOT real prices)
+  database: data/quantetf.db
+  start_date: "2015-01-01"
+  ffill_limit: 5
+  validation:
+    max_daily_move: 0.25      # flag |daily return| above this
+    min_history_days: 252
+
+benchmark: SPY
+risk_free_rate: 0.04          # annual
+
+universe:
+  - {ticker: VTI,  name: Vanguard Total Stock Market,       category: us_broad,               asset_class: equity,      expense_ratio: 0.0003}
+  - {ticker: VOO,  name: Vanguard S&P 500,                  category: us_large,               asset_class: equity,      expense_ratio: 0.0003}
+  - {ticker: SPY,  name: SPDR S&P 500,                      category: us_large,               asset_class: equity,      expense_ratio: 0.000945}
+  - {ticker: QQQ,  name: Invesco QQQ,                       category: us_growth,              asset_class: equity,      expense_ratio: 0.0020}
+  - {ticker: SCHD, name: Schwab US Dividend Equity,         category: dividend_growth,        asset_class: equity,      expense_ratio: 0.0006}
+  - {ticker: VIG,  name: Vanguard Dividend Appreciation,    category: dividend_growth,        asset_class: equity,      expense_ratio: 0.0005}
+  - {ticker: DGRO, name: iShares Core Dividend Growth,      category: dividend_growth,        asset_class: equity,      expense_ratio: 0.0008}
+  - {ticker: VYM,  name: Vanguard High Dividend Yield,      category: high_dividend,          asset_class: equity,      expense_ratio: 0.0006}
+  - {ticker: HDV,  name: iShares Core High Dividend,        category: high_dividend,          asset_class: equity,      expense_ratio: 0.0008}
+  - {ticker: SPYD, name: SPDR S&P 500 High Dividend,        category: high_dividend,          asset_class: equity,      expense_ratio: 0.0007}
+  - {ticker: JEPI, name: JPMorgan Equity Premium Income,    category: covered_call,           asset_class: equity,      expense_ratio: 0.0035}
+  - {ticker: DIVO, name: Amplify CWP Enhanced Dividend,     category: covered_call,           asset_class: equity,      expense_ratio: 0.0056}
+  - {ticker: VXUS, name: Vanguard Total International,      category: intl_broad,             asset_class: equity,      expense_ratio: 0.0005}
+  - {ticker: VEA,  name: Vanguard FTSE Developed Markets,   category: intl_developed,         asset_class: equity,      expense_ratio: 0.0006}
+  - {ticker: VWO,  name: Vanguard FTSE Emerging Markets,    category: emerging,               asset_class: equity,      expense_ratio: 0.0008}
+  - {ticker: BND,  name: Vanguard Total Bond Market,        category: bond_aggregate,         asset_class: bond,        expense_ratio: 0.0003}
+  - {ticker: AGG,  name: iShares Core US Aggregate Bond,    category: bond_aggregate,         asset_class: bond,        expense_ratio: 0.0003}
+  - {ticker: IEF,  name: iShares 7-10Y Treasury,            category: bond_treasury,          asset_class: bond,        expense_ratio: 0.0015}
+  - {ticker: TLT,  name: iShares 20+Y Treasury,             category: bond_treasury_long,     asset_class: bond,        expense_ratio: 0.0015}
+  - {ticker: TIP,  name: iShares TIPS Bond,                 category: tips,                   asset_class: bond,        expense_ratio: 0.0018}
+  - {ticker: LQD,  name: iShares IG Corporate Bond,         category: bond_corporate,         asset_class: bond,        expense_ratio: 0.0014}
+  - {ticker: HYG,  name: iShares High Yield Corporate,      category: bond_high_yield,        asset_class: bond,        expense_ratio: 0.0049}
+  - {ticker: VNQ,  name: Vanguard Real Estate,              category: real_estate,            asset_class: real_estate, expense_ratio: 0.0013}
+  - {ticker: GLD,  name: SPDR Gold Shares,                  category: gold,                   asset_class: commodity,   expense_ratio: 0.0040}
+
+screener:                      # default screen used by the dashboard
+  max_expense_ratio: 0.0060
+  min_history_years: 3
+  min_avg_dollar_volume: 5000000
+
+scoring:                       # default composite weights (normalized automatically)
+  sharpe: 0.25
+  cagr: 0.15
+  max_drawdown: 0.15
+  volatility: 0.10
+  yield: 0.10
+  div_cagr_5y: 0.10
+  expense_ratio: 0.15
+
+risk:
+  var_confidence: 0.95
+  max_position_weight: 0.40
+  max_portfolio_volatility: 0.20
+  max_drawdown_limit: -0.35
+  stress_scenarios:            # instantaneous shocks by asset_class
+    equity_crash:   {equity: -0.35, bond: 0.05, real_estate: -0.40, commodity: 0.05}
+    rate_shock:     {equity: -0.10, bond: -0.12, real_estate: -0.15, commodity: -0.05}
+    stagflation:    {equity: -0.20, bond: -0.08, real_estate: -0.15, commodity: 0.15}
+
+backtest:
+  initial_capital: 100000
+  rebalance: quarterly         # none | monthly | quarterly | annual | threshold
+  threshold: 0.05
+  transaction_cost_bps: 5
+  reinvest_dividends: true
+  dividend_tax_rate: 0.0
+  monthly_contribution: 0
+
+rebalancing:
+  threshold: 0.05
+  min_trade_value: 50
+  allow_fractional: false
+  cash_buffer: 0.01
+
+# Per-strategy overrides (any Strategy attribute)
+strategies:
+  dividend_growth: {top_n: 5, max_weight: 0.35}
+  high_income:     {top_n: 6, max_weight: 0.30}
+  balanced:        {}
+  index_investing: {}
+
+brokers:
+  default: manual              # manual | ibkr
+  manual:
+    account: manual
+  ibkr:
+    dry_run: true              # set false AND QUANTETF_ALLOW_LIVE=1 to place real orders
+    order_type: LMT
+    limit_offset_bps: 10
